@@ -16,5 +16,4 @@ The script continuously polls the latest block, retrieves ERC20 Transfer logs, f
 
 No private keys or signing is required. This script is read only.
 
-## Setup
-1. Install dependencies:
+
