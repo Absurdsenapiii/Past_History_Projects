@@ -1,0 +1,26 @@
+{
+  "name": "jupiter-proxy-server",
+  "version": "1.0.0",
+  "description": "Jupiter API proxy server to avoid CORS issues",
+  "type": "module",
+  "main": "server/jupproxy.js",
+  "scripts": {
+    "start": "node server/jupproxy.js",
+    "dev": "node server/jupproxy.js"
+  },
+  "keywords": [
+    "jupiter",
+    "solana",
+    "swap",
+    "proxy",
+    "cors"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "chalk": "^5.3.0"
+  }
+}

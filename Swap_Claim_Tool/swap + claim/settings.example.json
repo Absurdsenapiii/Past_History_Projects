@@ -1,0 +1,7 @@
+{
+  "rpcHttp": "https://YOUR_SOLANA_MAINNET_RPC_HTTP_URL",
+  "rpcWs": "wss://YOUR_SOLANA_MAINNET_RPC_WS_URL",
+  "backendBaseUrl": "http://localhost:3000",
+  "skipPreflight": true,
+  "defaultComputeUnits": 200000
+}

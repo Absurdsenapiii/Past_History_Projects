@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Solana dApp - Swap & Claim</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { 
+      --bg:#0b0c10; 
+      --card:#12131a; 
+      --ink:#e8e8e8; 
+      --muted:#9aa3b2; 
+      --accent:#8a63ff; 
+      --stroke:#202534; 
+      --danger:#ff6363; 
+      --success:#63ff8a; 
+      --warning:#ffa500;
+      --pending:#ffeb3b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+    .wrap{max-width:980px;margin:32px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h1{margin:0 0 10px;font-size:22px;color:var(--accent)}
+    h2{margin:16px 0 10px;font-size:18px;color:var(--ink)}
+    .muted{color:var(--muted);font-size:12px}
+    .grid{display:grid;gap:12px}
+    .two{grid-template-columns:1fr 1fr}
+    .three{grid-template-columns:1fr 1fr 1fr}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select,button{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:#0f1117;color:var(--ink)}
+    input[type="checkbox"]{width:auto;margin-right:8px}
+    button{background:var(--accent);border:none;color:white;font-weight:700;cursor:pointer;transition:all 0.2s}
+    button:hover:not(:disabled){opacity:0.9;transform:translateY(-1px)}
+    button.secondary{background:#1c2234;color:#e5e7eb}
+    button.danger{background:var(--danger);color:white}
+    button.success{background:var(--success);color:#0b0c10}
+    button:disabled{opacity:0.5;cursor:not-allowed}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#12192b;border:1px solid var(--stroke);font-size:12px}
+    .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+    .log{background:#0f1117;border:1px solid var(--stroke);border-radius:12px;padding:12px;height:200px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap}
+    .hr{height:1px;background:var(--stroke);border:0;margin:16px 0}
+    
+    /* Tabs */
+    .tabs{display:flex;gap:8px;margin-bottom:16px}
+    .tab{flex:1;background:#1c2234;color:#e5e7eb;border:1px solid var(--stroke);padding:12px;border-radius:12px 12px 0 0;cursor:pointer;font-weight:600;text-align:center;transition:all 0.2s}
+    .tab:hover{background:#252b3d}
+    .tab.active{background:var(--accent);color:white;border-bottom-color:var(--card)}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    
+    /* Wallet bar */
+    #walletBar{display:flex;gap:12px;align-items:center;padding:12px;background:#0f1117;border:1px solid var(--stroke);border-radius:12px;margin-bottom:16px}
+    #walletBar button{width:auto;min-width:140px}
+    #walletBar #pubkey{margin-left:auto}
+    
+    /* Box styling for claim UI */
+    .box{background:#1a1d28;border:1px solid var(--stroke);border-radius:8px;padding:10px;margin:12px 0}
+    .err{color:var(--danger);white-space:pre-wrap}
+    .ok{color:var(--success)}
+    pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap}
+    
+    /* Toast Notifications */
+    .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px;max-width:400px}
+    .toast{background:var(--card);border:1px solid var(--stroke);border-radius:12px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:slideIn 0.3s ease;display:flex;align-items:flex-start;gap:12px}
+    .toast.success{border-left:4px solid var(--success)}
+    .toast.error{border-left:4px solid var(--danger)}
+    .toast.warning{border-left:4px solid var(--warning)}
+    .toast.info{border-left:4px solid var(--accent)}
+    .toast-icon{font-size:24px;line-height:1}
+    .toast-content{flex:1}
+    .toast-title{font-weight:700;margin-bottom:4px;color:var(--ink)}
+    .toast-message{font-size:13px;color:var(--muted)}
+    .toast-close{cursor:pointer;color:var(--muted);font-size:20px;line-height:1;padding:0;background:none;border:none;width:auto;min-width:auto}
+    .toast-close:hover{color:var(--ink)}
+    @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}
+    .toast.closing{animation:slideOut 0.3s ease}
+    
+    /* Transaction Status Modal */
+    .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:none;align-items:center;justify-content:center;animation:fadeIn 0.2s}
+    .modal-overlay.active{display:flex}
+    .modal{background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:scaleIn 0.2s}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes scaleIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .modal-title{font-size:20px;font-weight:700;color:var(--accent)}
+    .modal-close{cursor:pointer;font-size:24px;color:var(--muted);background:none;border:none;padding:0;width:auto;min-width:auto}
+    .modal-close:hover{color:var(--ink)}
+    .tx-status{text-align:center;padding:20px}
+    .status-icon{font-size:64px;margin-bottom:16px}
+    .status-text{font-size:18px;font-weight:700;margin-bottom:8px}
+    .status-subtext{font-size:14px;color:var(--muted)}
+    .status-badge{display:inline-block;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;margin:8px 0}
+    .status-badge.pending{background:rgba(255,235,59,0.2);color:var(--pending);border:1px solid var(--pending)}
+    .status-badge.confirmed{background:rgba(99,255,138,0.2);color:var(--success);border:1px solid var(--success)}
+    .status-badge.failed{background:rgba(255,99,99,0.2);color:var(--danger);border:1px solid var(--danger)}
+    .tx-details{background:#0f1117;border:1px solid var(--stroke);border-radius:8px;padding:12px;margin:16px 0;font-size:13px}
+    .tx-detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--stroke)}
+    .tx-detail-row:last-child{border-bottom:none}
+    .tx-detail-label{color:var(--muted)}
+    .tx-detail-value{color:var(--ink);font-weight:600;word-break:break-all}
+    .tx-link{display:inline-block;padding:10px 20px;background:var(--accent);color:white;text-decoration:none;border-radius:8px;font-weight:600;margin-top:12px;transition:all 0.2s}
+    .tx-link:hover{opacity:0.9;transform:translateY(-1px)}
+    
+    /* Transaction History */
+    .tx-history{background:#0f1117;border:1px solid var(--stroke);border-radius:12px;padding:12px;margin-top:16px;max-height:400px;overflow-y:auto}
+    .tx-history-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+    .tx-history-clear{font-size:12px;color:var(--muted);cursor:pointer;font-weight:400}
+    .tx-history-clear:hover{color:var(--ink)}
+    .tx-history-item{background:var(--card);border:1px solid var(--stroke);border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s;cursor:pointer}
+    .tx-history-item:hover{border-color:var(--accent);transform:translateX(4px)}
+    .tx-history-item:last-child{margin-bottom:0}
+    .tx-history-info{flex:1}
+    .tx-history-type{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase}
+    .tx-history-sig{font-size:11px;color:var(--muted);font-family:ui-monospace,monospace;margin-top:4px}
+    .tx-history-status{text-align:right}
+    .tx-history-time{font-size:11px;color:var(--muted)}
+    .tx-history-empty{text-align:center;color:var(--muted);padding:20px;font-size:13px}
+    
+    /* Spinner */
+    .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
+    /* Progress Bar */
+    .progress-bar{width:100%;height:6px;background:#1a1d28;border-radius:3px;overflow:hidden;margin:12px 0}
+    .progress-fill{height:100%;background:linear-gradient(90deg, var(--accent), var(--success));border-radius:3px;transition:width 0.3s;animation:pulse 1.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+  </style>
+  <script src="https://unpkg.com/buffer@6.0.3/index.js"></script>
+  <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+  <script>
+    // Load settings.json before modules
+    (async function() {
+      try {
+        const res = await fetch('./settings.json');
+        const settings = await res.json();
+        window.SETTINGS = settings;
+        window.RPC_HTTP = settings.rpcHttp;
+        window.RPC_WS = settings.rpcWs;
+        window.BACKEND_BASE_URL = settings.backendBaseUrl || `${location.protocol}//${location.hostname}:3000`;
+        console.log('[SETTINGS] Loaded:', settings);
+      } catch (err) {
+        console.warn('[SETTINGS] Failed to load settings.json, using defaults:', err);
+        // Fallback to defaults
+        window.SETTINGS = {
+          skipPreflight: true,
+          defaultComputeUnits: 200000
+        };
+        window.BACKEND_BASE_URL = `${location.protocol}//${location.hostname}:3000`;
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <!-- Transaction Status Modal -->
+  <div class="modal-overlay" id="txModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Transaction Status</div>
+        <button class="modal-close" onclick="closeTxModal()">×</button>
+      </div>
+      <div id="txModalContent"></div>
+    </div>
+  </div>
+  
+  <div class="wrap">
+    <div class="card">
+      <h1>🚀 Solana dApp - Swap & Claim Dashboard</h1>
+      <div class="muted">Jupiter Swap + Presale Claim | Backend proxy: <code>http://localhost:3000</code></div>
+      
+      <!-- BACKPACK + PHANTOM SUPPORT -->
+      <!-- Wallet connection bar -->
+      <div id="walletBar" class="mt16">
+        <button id="connectBtn">Connect Wallet</button>
+        <button id="disconnectBtn" class="secondary">Disconnect</button>
+        <span id="pubkey" class="pill">Not connected</span>
+      </div>
+      
+      <!-- RPC Selector -->
+      <div class="mt12">
+        <label>RPC Endpoint</label>
+        <select id="rpcEndpoint">
+          <option value="https://solana-mainnet.g.alchemy.com/v2/YOUR_ALCHEMY_API_KEY">Alchemy (add your key)</option>
+          <option value="https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY">Helius (add your key)</option>
+          <option value="https://YOUR_QUIKNODE_HTTPS_URL">QuikNode (add your endpoint)</option>
+          <option value="https://rpc.ankr.com/solana">Ankr</option>
+          <option value="https://api.mainnet-beta.solana.com">Solana Mainnet (Default)</option>
+          <option value="custom">Custom RPC</option>
+        </select>
+        <input id="customRpc" type="text" placeholder="Enter custom RPC URL" style="margin-top:8px;display:none;">
+      </div>
+      
+      <hr class="hr" />
+      
+      <!-- Tab navigation -->
+      <div class="tabs">
+        <button class="tab active" data-tab="swap">Jupiter Swap</button>
+        <button class="tab" data-tab="claim">Presale Claim</button>
+        <button class="tab" data-tab="history">Transaction History</button>
+      </div>
+      
+      <!-- Swap Tab Content -->
+      <div id="swapTab" class="tab-content active">
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end">
+          <div>
+            <label>Input mint (base58)</label>
+            <input id="inputMint" value="So11111111111111111111111111111111111111112" />
+            <div class="muted mt8">SOL: <code>So1111…1112</code> • USDC: <code>EPjFWdd5…Dt1v</code></div>
+          </div>
+          <button id="swapMints" type="button" class="secondary" style="width:48px;height:48px;padding:0;font-size:20px" title="Swap input/output">⇄</button>
+          <div>
+            <label>Output mint (base58)</label>
+            <input id="outputMint" value="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" />
+          </div>
+        </div>
+
+        <div class="grid three mt12">
+          <div>
+            <label>Amount (human)</label>
+            <div class="row">
+              <input id="amount" type="number" step="any" value="0.01" style="flex:1"/>
+              <button id="btn25" type="button" class="secondary">25%</button>
+              <button id="btn50" type="button" class="secondary">50%</button>
+              <button id="btn100" type="button" class="secondary">100%</button>
+            </div>
+            <div class="muted mt8" id="balBox">Balance: ...</div>
+          </div>
+          <div><label>Slippage (bps)</label><input id="slippage" type="number" value="50" /></div>
+          <div>
+            <label>Priority fee (lamports)</label>
+            <input id="prioFee" type="number" placeholder="auto" />
+            <div class="muted mt8" style="font-size:11px">⚠️ QuickNode uses tip accounts; leave blank or use other RPC</div>
+          </div>
+        </div>
+
+        <div class="row mt16">
+          <button id="quoteBtn">1) Get Quote</button>
+          <button id="swapBtn" disabled>2) Build & Send Swap</button>
+        </div>
+
+        <div class="row mt12">
+          <button id="prebuildBtn" class="secondary">Prebuild Swap (offline)</button>
+          <button id="fireBtn" class="secondary" disabled>Fire Prebuilt</button>
+          <button id="instantBtn" class="danger">💥 Instant Buy</button>
+        </div>
+
+        <div id="quoteBox" class="mt16"></div>
+      </div>
+      
+      <!-- Claim Tab Content -->
+      <div id="claimTab" class="tab-content">
+        <div class="box muted">Wallet will simulate automatically. Always check the simulation pane before approving.</div>
+
+        <h2>Accounts</h2>
+
+        <div class="grid two">
+          <div>
+            <label>Launchpad Program ID</label>
+            <input id="programId" type="text" value="MooNyh4CBUYEKyXVnjGYQ8mEiJDpGvJMdvrZx1iGeHV">
+          </div>
+          <div>
+            <label>Launch (presale) account</label>
+            <input id="launch" type="text" value="9kx7UDFzFt7e2V4pFtawnupKKvRR3EhV7P1Pxmc5XCQj">
+          </div>
+        </div>
+
+        <div class="grid two mt12">
+          <div>
+            <label>Your Funding Record (PDA)</label>
+            <input id="fundingRecord" type="text" value="CVhKKeFnbq16PGnbUqDaQFwiUXk5XkuMW5WtW9FeAZFy">
+          </div>
+          <div>
+            <label>Launch Signer (PDA)</label>
+            <input id="launchSigner" type="text" value="3x1Nc6zwv3ouVYqWKYMbAi4e2x69cGjTYaXhuJy13LQa">
+          </div>
+        </div>
+
+        <div class="grid two mt12">
+          <div>
+            <label>Token Mint</label>
+            <input id="mint" type="text" value="PRVT6TB7uss3FrUd2D9xs2zqDBsa3GbMJMwCQsgmeta">
+          </div>
+          <div>
+            <label>Launch Vault (token account)</label>
+            <input id="vault" type="text" value="BZfv3UoZsjaPqMavitbXdw1qgagxD8cgQ4Su7Z9D19x1">
+          </div>
+        </div>
+
+        <div class="grid two mt12">
+          <div>
+            <label>Event Authority</label>
+            <input id="eventAuthority" type="text" value="CT3MNSgjE5EkcpZbBVVapxDR7B8hAxMZDbNeg5nQUxyR">
+          </div>
+          <div>
+            <label>Your ATA (leave blank to auto-compute)</label>
+            <input id="ata" type="text" placeholder="Optional: your associated token account">
+          </div>
+        </div>
+
+        <p class="mt12"><label><input id="createAta" type="checkbox" checked> Create ATA idempotently in the same tx (recommended)</label></p>
+        
+        <div class="mt12">
+          <label>Priority Fee (microLamports, or 'auto' for 0)</label>
+          <input id="priorityFee" type="text" value="auto" placeholder="auto or number">
+          <div class="muted mt8">Leave as 'auto' or 0 for QuickNode RPC. Other RPCs may need a value (e.g., 100000).</div>
+        </div>
+        
+        <p class="muted mt8">Token Program = TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA; System Program = 11111111111111111111111111111111; ATA Program = ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL</p>
+
+        <button id="sendBtn" class="mt16">Send Claim</button>
+        <pre id="claimOut" class="muted mt12"></pre>
+      </div>
+      
+      <!-- Transaction History Tab -->
+      <div id="historyTab" class="tab-content">
+        <div class="tx-history">
+          <div class="tx-history-title">
+            Recent Transactions
+            <span class="tx-history-clear" onclick="clearTxHistory()">Clear All</span>
+          </div>
+          <div id="txHistoryList">
+            <div class="tx-history-empty">No transactions yet</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Global log -->
+      <div id="log" class="log mt16"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/shared.js"></script>
+  <script type="module" src="js/swap.js"></script>
+  <script type="module" src="js/claim.js"></script>
+  <script type="module">
+    // Tab switching logic
+    document.addEventListener("DOMContentLoaded", () => {
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetTab = tab.getAttribute('data-tab');
+          
+          // Update active tab
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          // Update visible content
+          tabContents.forEach(content => {
+            if (content.id === targetTab + 'Tab') {
+              content.classList.add('active');
+            } else {
+              content.classList.remove('active');
+            }
+          });
+        });
+      });
+    });
+    
+    // Global modal functions
+    window.closeTxModal = function() {
+      document.getElementById('txModal').classList.remove('active');
+    };
+    
+    window.clearTxHistory = function() {
+      if (confirm('Clear all transaction history?')) {
+        localStorage.removeItem('txHistory');
+        document.getElementById('txHistoryList').innerHTML = '<div class="tx-history-empty">No transactions yet</div>';
+      }
+    };
+  </script>
+</body>
+</html>
