@@ -1,0 +1,41 @@
+{
+  "name": "multi-wallet-mint-bot-draft",
+  "version": "0.1.0",
+  "description": "DRAFT multi-wallet ERC-20 minting framework (archived, not production ready).",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "help": "node src/index.js help",
+    "gen": "node src/index.js gen",
+    "fund": "node src/index.js fund",
+    "mint": "node src/index.js mint",
+    "pay": "node src/index.js payment",
+    "watch": "node src/index.js watch",
+    "consolidate": "node src/index.js consolidate",
+    "refund": "node src/index.js refund",
+    "status": "node src/index.js status",
+    "dry:gen": "DRY_RUN=true node src/index.js gen",
+    "dry:fund": "DRY_RUN=true node src/index.js fund",
+    "dry:mint": "DRY_RUN=true node src/index.js mint",
+    "dry:consolidate": "DRY_RUN=true node src/index.js consolidate",
+    "dry:refund": "DRY_RUN=true node src/index.js refund",
+    "wipe-plaintext": "node src/utils.js --wipe-plaintext-keys"
+  },
+  "keywords": [
+    "ethereum",
+    "erc20",
+    "mint",
+    "multi-wallet",
+    "bot",
+    "draft"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.12.0",
+    "node-fetch": "^3.3.2",
+    "p-limit": "^4.0.0"
+  }
+}

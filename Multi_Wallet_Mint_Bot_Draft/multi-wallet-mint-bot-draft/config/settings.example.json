@@ -1,0 +1,60 @@
+{
+  "networkName": "ethereum-testnet",
+  "paymentMode": "directMint",
+  "walletCount": 50,
+  "contractAddress": "0x000000000000000000000000000000000000dEaD",
+  "tokenAddress": "0x000000000000000000000000000000000000dEaD",
+  "mintFunction": "mint(address,uint256)",
+  "mintArgs": [
+    "{wallet}",
+    "1"
+  ],
+  "mintValueWei": "0",
+  "prefundEthWei": "20000000000000000",
+  "funder": {
+    "safetyMarginEth": "0.05"
+  },
+  "usdc": {
+    "tokenAddress": "0x000000000000000000000000000000000000dEaD",
+    "recipient": "0x000000000000000000000000000000000000dEaD",
+    "amount": "1000000",
+    "validAfterSec": 0,
+    "validBeforeSec": 300,
+    "relayUrl": ""
+  },
+  "gas": {
+    "useDynamic": true,
+    "gasLimit": "200000",
+    "gasPrice": "20000000000",
+    "ceilGwei": 80,
+    "mint": {
+      "gasLimit": "300000"
+    },
+    "fund": {
+      "gasLimit": "21000"
+    },
+    "consolidate": {
+      "gasLimit": "120000"
+    },
+    "refund": {
+      "gasLimit": "21000"
+    }
+  },
+  "gasBump": {
+    "enabled": true,
+    "waitTime": 45000,
+    "bumpPercent": 10
+  },
+  "retryConfig": {
+    "maxRetries": 3,
+    "retryDelay": 5000,
+    "backoffMultiplier": 1.5
+  },
+  "minDustWei": "1000000000000000",
+  "mintEvents": {
+    "address": "0x000000000000000000000000000000000000dEaD",
+    "event": "Transfer(address,address,uint256)",
+    "toField": "to",
+    "lookbackBlocks": 1000
+  }
+}
