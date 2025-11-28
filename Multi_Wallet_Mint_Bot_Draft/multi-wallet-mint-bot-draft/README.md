@@ -1,4 +1,4 @@
-# 🧪 Multi‑Wallet Mint Bot — DRAFT (Archived)
+# 🧪 Multi‑Wallet Mint Bot - DRAFT (Archived)
 
 > **Status:** DRAFT • Experimental • Not production ready  
 > This repo exists as an archive of a past project, not as polished production software.
